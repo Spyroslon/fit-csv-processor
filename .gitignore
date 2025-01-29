@@ -1,3 +1,4 @@
 *.fit
-.venv
+*.csv
 venv
+.venv
