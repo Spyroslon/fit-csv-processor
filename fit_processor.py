@@ -1,7 +1,7 @@
 import fitparse
 from datetime import datetime
 import pandas as pd
-import sys
+import argparse
 import os
 
 def load_fit_file(fit_file, selected_records=None):
@@ -73,28 +73,39 @@ def process_fit_file(fit_file, output_file, selected_records=None, rounded_times
 def main():
 
     selected_records = ["record", "timestamp", "distance", "enhanced_altitude", "enhanced_speed", "gps_accuracy", "position_lat", "position_long", "speed", "heart_rate"]
-    rounded_timestamp_seconds = 0
 
-    args = sys.argv[1:]
-    if not args:
-        print("Usage: pass fit files in arguments")
-        return
-        
-    for filename in args:
-        if not filename.endswith('.fit'):
-            print(f"Skipping non-FIT file: {filename}")
-            continue
-            
-        try:
-            output_file = f"{os.path.splitext(filename)[0]}_summary.csv"
-            success = process_fit_file(filename, output_file, selected_records, rounded_timestamp_seconds)
-            if success:
-                print(f"Successfully processed: {filename}")
-            else:
-                print(f"Error processing: {filename}")
-                
-        except Exception as e:
-            print(f"Error processing file {filename}: {str(e)}")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--input", help="Path to the FIT file to process")
+    parser.add_argument("-o", "--output_folder", help="Folder path to the output CSV file")
+    parser.add_argument("--selected_records", nargs='+', default=selected_records, help="List of FIT records to include in the output")
+    parser.add_argument("--rounded_timestamp_seconds", type=int, default=0, help="Round timestamps to the nearest N seconds")
+    args = parser.parse_args()
+    print(args)
+
+    input_filepath = os.path.normpath(args.input)
+    output_folder = os.path.normpath(args.output_folder)
+    selected_records = args.selected_records
+    rounded_timestamp_seconds = args.rounded_timestamp_seconds
+
+    print('input_filepath:', input_filepath)
+    print('output_folder:', output_folder)
+
+    file_format = os.path.splitext(input_filepath)[1]
+    if file_format != '.fit':
+        print(f"Skipping non-FIT file: {input_filepath}")
+
+    try:
+        output_filepath = os.path.join(output_folder, os.path.basename(input_filepath).replace('.fit', '_summary.csv'))
+        # print(output_filepath)
+
+        success = process_fit_file(input_filepath, output_filepath, selected_records, rounded_timestamp_seconds)
+        if success:
+            print(f"Successfully processed: {input_filepath}")
+        else:
+            print(f"Error processing: {input_filepath}")
+
+    except Exception as e:
+        print(f"Error processing file {input_filepath}: {str(e)}")
 
 if __name__ == "__main__":
     main()

@@ -12,7 +12,7 @@ The backend is built with Go, and it executes a Python script to handle data cle
 
 ## Project Structure
 ```
-fit-to-csv/
+fit-csv-processor/
 │── uploads/        # Stores uploaded .fit files
 │── processed/      # Stores processed .csv files
 │── static/         # Contains HTML, CSS, and JavaScript for the frontend
@@ -30,8 +30,8 @@ fit-to-csv/
 ## Setup
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/fit-to-csv.git
-   cd fit-to-csv
+   git clone https://github.com/Spyroslon/fit-csv-processor.git
+   cd fit-csv-processor
    ```
 2. Install dependencies:
    - Ensure Go is installed.
@@ -50,12 +50,12 @@ fit-to-csv/
 - `POST /upload` - Upload a `.fit` file.
 - `GET /download?file=filename.csv` - Download the processed `.csv` file.
 
-## Python Processing Script (`process_fit.py`)
+## Python Processing Script (`fit_processor.py`)
 This script loads `.fit` files, extracts relevant data, processes timestamps, and outputs a cleaned `.csv` file.
 
 ### Usage:
 ```sh
-python process_fit.py file1.fit file2.fit
+python fit_processor.py --i file1.fit --o processed
 ```
 
 ### Selected Records:

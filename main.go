@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -12,27 +14,43 @@ import (
 const uploadDir = "uploads"
 const processedDir = "processed"
 
+func serveIndex(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "static/index.html")
+}
+
 func main() {
-	// Ensure directories exist
 	os.MkdirAll(uploadDir, os.ModePerm)
 	os.MkdirAll(processedDir, os.ModePerm)
 
+	// Register specific handlers first
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/download", downloadHandler)
-	http.Handle("/", http.FileServer(http.Dir("./static")))
+
+	// Use a custom handler for the homepage
+	http.HandleFunc("/", serveIndex)
 
 	fmt.Println("Server started at http://localhost:8080")
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe("localhost:8080", nil)
 }
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost { // Ensure only POST requests are handled
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	log.Println("Received file upload request")
+
+	err := r.ParseMultipartForm(10 << 20) // 10 MB limit
+	if err != nil {
+		log.Println("Failed to parse form:", err)
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
 	file, handler, err := r.FormFile("file")
 	if err != nil {
+		log.Println("Failed to read file:", err)
 		http.Error(w, "Failed to read file", http.StatusBadRequest)
 		return
 	}
@@ -41,6 +59,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	savePath := filepath.Join(uploadDir, handler.Filename)
 	out, err := os.Create(savePath)
 	if err != nil {
+		log.Println("Failed to save file:", err)
 		http.Error(w, "Failed to save file", http.StatusInternalServerError)
 		return
 	}
@@ -50,20 +69,35 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Process the file with Python
 	outputFile := filepath.Join(processedDir, handler.Filename[:len(handler.Filename)-4]+"_summary.csv")
-	cmd := exec.Command("python3", "fit_processor.py", savePath)
-	if err := cmd.Run(); err != nil {
-		http.Error(w, "Failed to process file", http.StatusInternalServerError)
-		return
-	}
+	cmd := exec.Command("python", "fit_processor.py", "--i", savePath, "--o", processedDir)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		log.Println("Python processing failed:", string(output))
 		http.Error(w, fmt.Sprintf("Failed to process file: %s\n%s", err, output), http.StatusInternalServerError)
 		return
 	}
 
-	// Return processed file link
-	fmt.Fprintf(w, "File processed. <a href='/download?file=%s'>Download</a>", filepath.Base(outputFile))
+	log.Println("Python script output:", string(output))
+
+	// Check if the output file exists
+	if _, err := os.Stat(outputFile); os.IsNotExist(err) {
+		log.Println("Processed file not found")
+		http.Error(w, "Processed file not found", http.StatusInternalServerError)
+		return
+	}
+
+	// ✅ Make sure we respond with JSON
+	response := map[string]string{
+		"message":       "File processed successfully",
+		"download_link": fmt.Sprintf("/download?file=%s", filepath.Base(outputFile)),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // ✅ Ensures correct response
+	json.NewEncoder(w).Encode(response)
+
+	log.Println("JSON response sent successfully")
 }
 
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
