@@ -1,62 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload a FIT File</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FIT File Processor</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
-    <h2>Upload a FIT File</h2>
-    <div>
-        <input type="file" id="fileInput" accept=".fit" required>
-        <button id="uploadButton">Upload</button>
-    </div>
-    <div id="message"></div>
-    <div id="downloadButton"></div>
+  <div class="container">
+    <h2>FIT File Processor</h2>
 
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // ✅ Prevents form submission
-            event.stopPropagation(); // ✅ Stops bubbling up event
-    
-            var formData = new FormData();
-            var fileInput = document.getElementById('fileInput');
-            if (!fileInput.files.length) {
-                alert("Please select a file.");
-                return;
-            }
-            
-            formData.append('file', fileInput.files[0]);
-    
-            fetch('/upload', { 
-                method: 'POST',
-                body: formData,
-                headers: { "Accept": "application/json" } // ✅ Tell the server we expect JSON
-            })
-            .then(response => {
-                console.log("Response received:", response);
-                return response.json(); // ✅ Force JSON processing
-            })
-            .then(data => {
-                console.log("JSON parsed successfully:", data);
-                document.getElementById('message').innerText = data.message;
-    
-                var downloadButton = document.createElement('a');
-                downloadButton.href = data.download_link;
-                downloadButton.innerText = 'Download Processed File';
-                downloadButton.className = 'btn btn-primary';
-                downloadButton.style.display = 'block';
-                downloadButton.style.marginTop = '10px';
-    
-                document.getElementById('downloadButton').innerHTML = ''; 
-                document.getElementById('downloadButton').appendChild(downloadButton);
-            })
-            .catch(error => {
-                console.error("Error in fetch:", error);
-                document.getElementById('message').innerText = 'An error occurred while processing the file.';
-            });
-        });
-    </script>
-    
+    <!-- Upload Section -->
+    <div class="upload-section">
+      <p>Select a <strong>.fit</strong> file and click "Upload & Process".</p>
+      
+      <!-- Custom file upload button -->
+      <label for="fileInput" class="custom-file-upload">
+        📂 Choose File
+      </label>
+      <input type="file" id="fileInput" accept=".fit" />
+      <p id="fileName">No file chosen</p>
+      
+      <button id="uploadButton">📤 Upload & Process</button>
+    </div>
+
+    <!-- Result Section (Initially Hidden) -->
+    <div id="resultSection" class="result-section hidden">
+      <h3>✅ File Processed Successfully</h3>
+      <p>Your processed file:</p>
+      <p id="downloadFileName" class="file-name"></p>
+      <button id="downloadButton">⬇ Download Processed File</button>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const fileNameDisplay = document.getElementById('fileName');
+    const uploadButton = document.getElementById('uploadButton');
+    const resultSection = document.getElementById('resultSection');
+    const downloadButton = document.getElementById('downloadButton');
+    const downloadFileName = document.getElementById('downloadFileName');
+
+    // Update filename display when file is selected
+    fileInput.addEventListener('change', () => {
+      fileNameDisplay.textContent = fileInput.files.length ? fileInput.files[0].name : "No file chosen";
+    });
+
+    uploadButton.addEventListener('click', () => {
+      if (!fileInput.files.length) {
+        alert('Please select a file.');
+        return;
+      }
+
+      uploadButton.innerText = "⏳ Processing..."; // Indicate processing
+      uploadButton.disabled = true; // Disable button while processing
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      fetch('/upload', {
+        method: 'POST',
+        body: formData,
+        headers: { "Accept": "application/json" }
+      })
+      .then(response => response.json())
+      .then(data => {
+        uploadButton.innerText = "📤 Upload & Process"; // Reset button text
+        uploadButton.disabled = false; // Re-enable button
+
+        // Display result section
+        resultSection.classList.remove('hidden');
+
+        // Show processed file name
+        downloadFileName.textContent = data.download_link.split("=")[1]; // Extract filename from link
+
+        // Set download button action
+        downloadButton.onclick = () => {
+          window.location.href = data.download_link;
+        };
+      })
+      .catch(error => {
+        console.error('Upload error:', error);
+        alert('An error occurred while processing the file.');
+        uploadButton.innerText = "📤 Upload & Process"; // Reset button text
+        uploadButton.disabled = false; // Re-enable button
+      });
+    });
+  </script>
 </body>
 </html>

@@ -14,25 +14,20 @@ import (
 const uploadDir = "uploads"
 const processedDir = "processed"
 
-func serveIndex(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "static/index.html")
-}
-
 func main() {
+	// Ensure directories exist
 	os.MkdirAll(uploadDir, os.ModePerm)
 	os.MkdirAll(processedDir, os.ModePerm)
 
-	// Register specific handlers first
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/download", downloadHandler)
-
-	// Use a custom handler for the homepage
-	http.HandleFunc("/", serveIndex)
+	http.Handle("/", http.FileServer(http.Dir("./static")))
 
 	fmt.Println("Server started at http://localhost:8080")
 	http.ListenAndServe("localhost:8080", nil)
 }
 
+// uploadHandler processes file uploads and calls the Python script.
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost { // Ensure only POST requests are handled
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -87,19 +82,19 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ✅ Make sure we respond with JSON
+	// Respond with JSON containing the download link.
 	response := map[string]string{
 		"message":       "File processed successfully",
 		"download_link": fmt.Sprintf("/download?file=%s", filepath.Base(outputFile)),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK) // ✅ Ensures correct response
 	json.NewEncoder(w).Encode(response)
 
 	log.Println("JSON response sent successfully")
 }
 
+// downloadHandler serves the processed CSV file.
 func downloadHandler(w http.ResponseWriter, r *http.Request) {
 	file := r.URL.Query().Get("file")
 	if file == "" {

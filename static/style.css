@@ -1,0 +1,136 @@
+/* Reset default browser styling */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /* Dark mode base styles */
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: #222;
+    color: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  .container {
+    background: #333;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  /* Upload Section */
+  .upload-section {
+    padding-bottom: 20px;
+    border-bottom: 1px solid #444;
+  }
+  
+  h2 {
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  
+  p {
+    margin-bottom: 20px;
+    font-size: 16px;
+  }
+  
+  /* Hide default file input */
+  input[type="file"] {
+    display: none;
+  }
+  
+  /* Custom file upload button */
+  .custom-file-upload {
+    display: inline-block;
+    background: #007bff;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+  }
+  
+  .custom-file-upload:hover {
+    background: #0056b3;
+  }
+  
+  /* Display selected file name */
+  #fileName {
+    font-size: 14px;
+    color: #ccc;
+    margin-top: 5px;
+  }
+  
+  /* Upload Button */
+  button {
+    background: #009688;
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+    margin-top: 10px;
+  }
+  
+  button:disabled {
+    background: #555;
+    cursor: not-allowed;
+  }
+  
+  button:hover {
+    background: #00796b;
+  }
+  
+  /* Result Section */
+  .result-section {
+    padding-top: 20px;
+  }
+  
+  .result-section h3 {
+    color: #4CAF50;
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  
+  .result-section p {
+    font-size: 16px;
+    margin-bottom: 15px;
+  }
+  
+  /* Display filename after processing */
+  .file-name {
+    font-weight: bold;
+    font-size: 18px;
+    color: #FFD700;
+    margin-bottom: 10px;
+  }
+  
+  /* Initially hide result section */
+  .hidden {
+    display: none;
+  }
+  
+  /* Download Button - Emphasized */
+  #downloadButton {
+    background: #FFD700;
+    color: #222;
+    font-weight: bold;
+  }
+  
+  #downloadButton:hover {
+    background: #FFC107;
+  }
+  
