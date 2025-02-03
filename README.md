@@ -16,7 +16,7 @@ fit-csv-processor/
 │── uploads/        # Stores uploaded .fit files
 │── processed/      # Stores processed .csv files
 │── static/         # Contains HTML, CSS, and JavaScript for the frontend
-│── process_fit.py  # Python script to process .fit files
+│── fit_processor.py  # Python script to process .fit files
 │── main.go         # Go backend handling uploads and downloads
 │── README.md       # Project documentation
 ```
